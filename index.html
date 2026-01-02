@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>La mulți ani 2026</title>
+
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    background: black;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+}
+canvas {
+    display: block;
+}
+#tap {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    color: white;
+    font-family: Arial, sans-serif;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div id="tap">🔊 Atinge ecranul pentru a porni sunetul și artificiile</div>
+<canvas id="canvas"></canvas>
+
+<script>
+// ===== CANVAS =====
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
+
+// ===== SUNET =====
+let audioEnabled = false;
+const audio = new Audio("firework.mp3");
+audio.volume = 0.6;
+
+function playSound() {
+    if (!audioEnabled) return;
+    audio.currentTime = 0;
+    audio.play().catch(e => console.log("Eroare redare audio:", e));
+}
+
+// ===== PARTICULE =====
+class Particle {
+    constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 5;
+        this.vy = (Math.random() - 0.5) * 5;
+        this.alpha = 1;
+        this.color = color;
+    }
+    update() {
+        this.vy += 0.04; // gravitație ușoară
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= 0.012;
+    }
+    draw() {
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+    }
+}
+
+let particles = [];
+
+// ===== ARTIFICIU =====
+function firework() {
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height * 0.45;
+    const color = `hsl(${Math.random()*360},100%,50%)`;
+    const count = window.innerWidth < 768 ? 30 : 45;
+
+    for (let i=0; i<count; i++) {
+        particles.push(new Particle(x, y, color));
+    }
+
+    playSound();
+}
+
+// ===== TEXT =====
+function drawText() {
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    const big = Math.min(canvas.width * 0.12, 70);
+    const small = big * 0.55;
+
+    ctx.font = `bold ${big}px Arial`;
+    ctx.fillStyle = "#FFD700";
+    ctx.fillText("LA MULȚI ANI 2026", canvas.width/2, canvas.height/2 - big);
+
+    ctx.font = `bold ${small}px Arial`;
+    ctx.fillStyle = "#FF4444";
+    ctx.fillText("VĂ UREAZĂ FAMILIA NICOLAE", canvas.width/2, canvas.height/2 + small);
+}
+
+// ===== ANIMAȚIE =====
+function animate() {
+    ctx.fillStyle = "rgba(0,0,0,0.25)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    drawText();
+
+    particles.forEach((p,i) => {
+        p.update();
+        p.draw();
+        if(p.alpha<=0) particles.splice(i,1);
+    });
+
+    requestAnimationFrame(animate);
+}
+
+animate();
+
+// ===== DEBLOCARE AUDIO + START ARTIFICII =====
+const tapDiv = document.getElementById("tap");
+function startExperience() {
+    audioEnabled = true;
+    tapDiv.style.display = "none";
+    firework(); // primul artificiu
+    setInterval(firework, 700);
+}
+
+tapDiv.addEventListener("click", startExperience);
+tapDiv.addEventListener("touchstart", startExperience);
+</script>
+
+</body>
+</html>
